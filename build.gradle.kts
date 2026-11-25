@@ -50,7 +50,7 @@ compose.desktop {
             packageName = "MeshViewer"
             packageVersion = project.version.toString()
             description = "Quick STL / 3MF previewer"
-            vendor = "jurriaanr"
+            vendor = providers.gradleProperty("vendor").get() // from gradle.properties
 
             // java.xml: StAX parser for 3MF. jdk.unsupported: needed by LWJGL.
             // java.instrument: listed by `gradlew suggestRuntimeModules`.
