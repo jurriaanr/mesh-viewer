@@ -45,3 +45,6 @@ W wireframe, G grid, Ctrl+O open, drag & drop files onto the viewport.
 - 3MF: core spec, components, build transforms, units, Production extension (p:path, Bambu/Orca/Prusa
   project files), basematerials/colorgroup object colours. Per-triangle paint colours are not shown.
 - Each double-clicked file opens its own window.
+
+## License
+MIT, see [LICENSE](LICENSE).
