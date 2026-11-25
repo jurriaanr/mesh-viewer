@@ -7,7 +7,7 @@ else
 GRADLE := ./gradlew
 endif
 
-.PHONY: help run app release release-minor release-major release-dry
+.PHONY: help run app release release-minor release-major release-local release-dry
 
 help: ## list the targets
 	@pwsh -NoProfile -Command "Select-String -Path Makefile -Pattern '^([a-z-]+):.*?## (.*)$$' | ForEach-Object { '  {0,-15} {1}' -f $$_.Matches[0].Groups[1].Value, $$_.Matches[0].Groups[2].Value }"
@@ -18,14 +18,17 @@ run: ## run the app from source
 app: ## build the packaged app without installing (build/compose/binaries/main/app)
 	$(GRADLE) createDistributable
 
-release: ## bump the patch version (1.0.0 -> 1.0.1), build the installer, commit and tag
+release: ## bump the patch version (1.0.0 -> 1.0.1), build, commit, tag and push
 	pwsh -NoProfile -File scripts/release.ps1 -Bump patch
 
-release-minor: ## bump the minor version (1.0.1 -> 1.1.0), build, commit and tag
+release-minor: ## bump the minor version (1.0.1 -> 1.1.0), build, commit, tag and push
 	pwsh -NoProfile -File scripts/release.ps1 -Bump minor
 
-release-major: ## bump the major version (1.1.0 -> 2.0.0), build, commit and tag
+release-major: ## bump the major version (1.1.0 -> 2.0.0), build, commit, tag and push
 	pwsh -NoProfile -File scripts/release.ps1 -Bump major
+
+release-local: ## bump the patch version, build, commit and tag, but do not push
+	pwsh -NoProfile -File scripts/release.ps1 -Bump patch -NoPush
 
 release-dry: ## show what `make release` would do, without changing anything
 	pwsh -NoProfile -File scripts/release.ps1 -Bump patch -DryRun

@@ -29,7 +29,11 @@ uses it for both the project and the installer. Windows only upgrades an install
 version, so every installer handed out needs a new number. Don't bump it by hand — use
 `make release` (patch), `make release-minor` or `make release-major`, which run `scripts/release.ps1`:
 it refuses a dirty tree, bumps the version, builds the installer, and only then commits
-`chore(release): X.Y.Z` and tags `vX.Y.Z` (on a failed build it restores the file). It does not push.
+`chore(release): X.Y.Z` and tags `vX.Y.Z` (on a failed build it restores the file), then pushes main and
+the tag (`make release-local` / `-NoPush` stops before the push). Pushing the tag runs `.github/workflows/release.yml`: it builds the MSI on a Windows runner, publishes a
+GitHub release, and submits the version to winget with `wingetcreate update` (needs the `WINGET_TOKEN`
+secret; identifier `OutlawsITSoftware.MeshViewer`). winget upgrades rely on the MSI `upgradeUuid` and an
+increasing version, and the MSI file name `MeshViewer-X.Y.Z.msi` is part of the download URL.
 To try a build without releasing, use `make app` (packaged app, no installer) or `make run`.
 
 There are no automated tests. Verify a change by compiling, then by running the app and opening a model.

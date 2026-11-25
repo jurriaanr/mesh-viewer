@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Bumps the app version, builds the installer, then commits and tags the release.
+    Bumps the app version, builds the installer, commits and tags the release, and pushes it.
 
 .DESCRIPTION
     The version lives in gradle.properties. Windows only upgrades an installed MSI when
@@ -11,6 +11,9 @@
     succeeded, and it is restored if the build fails, so a broken build never burns a
     version number.
 
+    Pushing the tag starts .github/workflows/release.yml, which publishes the GitHub
+    release and submits the version to winget. Use -NoPush to stop after tagging.
+
 .EXAMPLE
     pwsh scripts/release.ps1 -Bump patch -DryRun
 #>
@@ -18,7 +21,9 @@ param(
     [ValidateSet('patch', 'minor', 'major')]
     [string]$Bump = 'patch',
     # Show what would happen without changing, building or committing anything.
-    [switch]$DryRun
+    [switch]$DryRun,
+    # Commit and tag locally but do not push (no GitHub release, no winget submission).
+    [switch]$NoPush
 )
 
 $ErrorActionPreference = 'Stop'
@@ -58,13 +63,23 @@ if ($major -gt 255 -or $minor -gt 255 -or $patch -gt 65535) {
 }
 if (git tag --list $tag) { Fail "tag $tag already exists" }
 
+if (-not $NoPush) {
+    # Check before building: a failed push after tagging would leave a release half done.
+    $branch = git rev-parse --abbrev-ref HEAD
+    if ($branch -ne 'main') { Fail "on branch '$branch'; releases are pushed from main (or use -NoPush)" }
+    git fetch -q origin main
+    if ($LASTEXITCODE -ne 0) { Fail 'git fetch failed; check the network or use -NoPush' }
+    if ((git rev-list --count HEAD..origin/main) -ne '0') { Fail 'origin/main has commits you do not have; pull first' }
+}
+
 if ($IsWindows) {
     $gradle = '.\gradlew.bat'; $task = 'packageMsi'; $outDir = 'build/compose/binaries/main/msi'
 } else {
     $gradle = './gradlew'; $task = 'packageDeb'; $outDir = 'build/compose/binaries/main/deb'
 }
 
-Write-Host "release: $current -> $next ($Bump), build with '$gradle $task'"
+$pushNote = if ($NoPush) { 'no push' } else { 'then push' }
+Write-Host "release: $current -> $next ($Bump), build with '$gradle $task', $pushNote"
 if ($DryRun) {
     Write-Host 'release: dry run, nothing changed'
     exit 0
@@ -93,4 +108,13 @@ $installer = Get-ChildItem $outDir -Filter "*$next*" | Select-Object -First 1
 Write-Host ''
 Write-Host "release: $tag built and tagged" -ForegroundColor Green
 if ($installer) { Write-Host "release: installer $($installer.FullName)" }
-Write-Host 'release: publish with   git push --follow-tags'
+
+if ($NoPush) {
+    Write-Host 'release: not pushed; publish with   git push --follow-tags'
+    exit 0
+}
+
+# --atomic: the commit and the tag land together or not at all.
+git push --atomic --follow-tags origin main
+if ($LASTEXITCODE -ne 0) { Fail 'git push failed; the release is committed and tagged locally, retry with   git push --follow-tags' }
+Write-Host "release: pushed; GitHub Actions now builds the release and submits it to winget" -ForegroundColor Green
