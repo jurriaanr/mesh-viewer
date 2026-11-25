@@ -73,9 +73,17 @@ jobs:
       - name: Submit to winget
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if (-not $env:WINGET_TOKEN) {
             Write-Host '::warning::WINGET_TOKEN secret not set; skipping the winget submission'
+            exit 0
+          }
+          # winget-pkgs layout: manifests/<first letter>/<Publisher>/<Package>
+          $manifestDir = "manifests/$($env:WINGET_ID.Substring(0, 1).ToLower())/$($env:WINGET_ID -replace '\.', '/')"
+          gh api "repos/microsoft/winget-pkgs/contents/$manifestDir" --silent 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::$env:WINGET_ID is not in winget-pkgs yet (or the lookup failed); submit the first version with 'wingetcreate new', see README"
             exit 0
           }
           $version = '${{ steps.version.outputs.version }}'
