@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+.kotlin/
+
+# IntelliJ IDEA (project is fully defined by Gradle; the IDE regenerates these on import)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and JVM crash dumps
+*.log
+hs_err_pid*.log
+replay_pid*.log

@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+# Executed by sh on Linux/macOS: a CRLF breaks the interpreter line.
+gradlew text eol=lf
+# Executed by cmd.exe on Windows.
+*.bat text eol=crlf
+
+*.jar binary
