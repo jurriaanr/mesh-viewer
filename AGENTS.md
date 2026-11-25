@@ -21,6 +21,17 @@ Use `.\gradlew.bat` on Windows (PowerShell), `./gradlew` elsewhere. JDK 17+.
 | Windows installer | `gradlew packageMsi` → `build/compose/binaries/main/msi/` |
 | Linux packages | `gradlew packageDeb` / `gradlew packageRpm` |
 
+A `Makefile` wraps the common tasks (`make help` lists them). Recipes run through cmd.exe on Windows, so
+they stay plain one-line commands; any logic goes in a pwsh 7 script under `scripts/`.
+
+**Versioning and releases.** The version lives only in `gradle.properties` (`version=X.Y.Z`); the build
+uses it for both the project and the installer. Windows only upgrades an installed MSI to a *higher*
+version, so every installer handed out needs a new number. Don't bump it by hand — use
+`make release` (patch), `make release-minor` or `make release-major`, which run `scripts/release.ps1`:
+it refuses a dirty tree, bumps the version, builds the installer, and only then commits
+`chore(release): X.Y.Z` and tags `vX.Y.Z` (on a failed build it restores the file). It does not push.
+To try a build without releasing, use `make app` (packaged app, no installer) or `make run`.
+
 There are no automated tests. Verify a change by compiling, then by running the app and opening a model.
 Installers must be built on the OS they target (jpackage and the LWJGL natives are per-OS).
 

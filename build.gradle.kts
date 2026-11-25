@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "jurriaanr"
-version = "1.0.0"
+// version comes from gradle.properties (single source, bumped by `make release`)
 
 val lwjglVersion = "3.4.3"
 
@@ -48,7 +48,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm)
             packageName = "MeshViewer"
-            packageVersion = "1.0.0"
+            packageVersion = project.version.toString()
             description = "Quick STL / 3MF previewer"
             vendor = "jurriaanr"
 
